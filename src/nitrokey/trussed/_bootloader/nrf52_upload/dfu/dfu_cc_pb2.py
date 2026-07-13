@@ -6,12 +6,19 @@
 
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
+from google.protobuf import message as _message
+from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+from google.protobuf.internal import enum_type_wrapper
 
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
+
+
+def _b(data: str) -> bytes:
+    return data.encode("latin1")
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
@@ -51,4 +58,823 @@ if not _descriptor._USE_C_DESCRIPTORS:
     _globals["_SIGNEDCOMMAND"]._serialized_end = 696
     _globals["_PACKET"]._serialized_start = 698
     _globals["_PACKET"]._serialized_end = 781
+# @@protoc_insertion_point(module_scope)
+
+
+_OPCODE = _descriptor.EnumDescriptor(
+    name="OpCode",
+    full_name="dfu.OpCode",
+    filename=None,
+    file=DESCRIPTOR,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="RESET", index=0, number=0, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="INIT", index=1, number=1, serialized_options=None, type=None
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=747,
+    serialized_end=776,
+)
+_sym_db.RegisterEnumDescriptor(_OPCODE)
+
+OpCode = enum_type_wrapper.EnumTypeWrapper(_OPCODE)
+_FWTYPE = _descriptor.EnumDescriptor(
+    name="FwType",
+    full_name="dfu.FwType",
+    filename=None,
+    file=DESCRIPTOR,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="APPLICATION", index=0, number=0, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="SOFTDEVICE", index=1, number=1, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="BOOTLOADER", index=2, number=2, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="SOFTDEVICE_BOOTLOADER", index=3, number=3, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="EXTERNAL_APPLICATION", index=4, number=4, serialized_options=None, type=None
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=778,
+    serialized_end=888,
+)
+_sym_db.RegisterEnumDescriptor(_FWTYPE)
+
+FwType = enum_type_wrapper.EnumTypeWrapper(_FWTYPE)
+_HASHTYPE = _descriptor.EnumDescriptor(
+    name="HashType",
+    full_name="dfu.HashType",
+    filename=None,
+    file=DESCRIPTOR,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="NO_HASH", index=0, number=0, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="CRC", index=1, number=1, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="SHA128", index=2, number=2, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="SHA256", index=3, number=3, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="SHA512", index=4, number=4, serialized_options=None, type=None
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=890,
+    serialized_end=958,
+)
+_sym_db.RegisterEnumDescriptor(_HASHTYPE)
+
+HashType = enum_type_wrapper.EnumTypeWrapper(_HASHTYPE)
+_VALIDATIONTYPE = _descriptor.EnumDescriptor(
+    name="ValidationType",
+    full_name="dfu.ValidationType",
+    filename=None,
+    file=DESCRIPTOR,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="NO_VALIDATION", index=0, number=0, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="VALIDATE_GENERATED_CRC", index=1, number=1, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="VALIDATE_SHA256", index=2, number=2, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="VALIDATE_ECDSA_P256_SHA256", index=3, number=3, serialized_options=None, type=None
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=960,
+    serialized_end=1076,
+)
+_sym_db.RegisterEnumDescriptor(_VALIDATIONTYPE)
+
+ValidationType = enum_type_wrapper.EnumTypeWrapper(_VALIDATIONTYPE)
+_SIGNATURETYPE = _descriptor.EnumDescriptor(
+    name="SignatureType",
+    full_name="dfu.SignatureType",
+    filename=None,
+    file=DESCRIPTOR,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="ECDSA_P256_SHA256", index=0, number=0, serialized_options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="ED25519", index=1, number=1, serialized_options=None, type=None
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=1078,
+    serialized_end=1129,
+)
+_sym_db.RegisterEnumDescriptor(_SIGNATURETYPE)
+
+SignatureType = enum_type_wrapper.EnumTypeWrapper(_SIGNATURETYPE)
+RESET = 0
+INIT = 1
+APPLICATION = 0
+SOFTDEVICE = 1
+BOOTLOADER = 2
+SOFTDEVICE_BOOTLOADER = 3
+EXTERNAL_APPLICATION = 4
+NO_HASH = 0
+CRC = 1
+SHA128 = 2
+SHA256 = 3
+SHA512 = 4
+NO_VALIDATION = 0
+VALIDATE_GENERATED_CRC = 1
+VALIDATE_SHA256 = 2
+VALIDATE_ECDSA_P256_SHA256 = 3
+ECDSA_P256_SHA256 = 0
+ED25519 = 1
+
+
+_HASH = _descriptor.Descriptor(
+    name="Hash",
+    full_name="dfu.Hash",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="hash_type",
+            full_name="dfu.Hash.hash_type",
+            index=0,
+            number=1,
+            type=14,
+            cpp_type=8,
+            label=2,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="hash",
+            full_name="dfu.Hash.hash",
+            index=1,
+            number=2,
+            type=12,
+            cpp_type=9,
+            label=2,
+            has_default_value=False,
+            default_value=_b(""),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=36,
+    serialized_end=90,
+)
+
+
+_BOOTVALIDATION = _descriptor.Descriptor(
+    name="BootValidation",
+    full_name="dfu.BootValidation",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="type",
+            full_name="dfu.BootValidation.type",
+            index=0,
+            number=1,
+            type=14,
+            cpp_type=8,
+            label=2,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="bytes",
+            full_name="dfu.BootValidation.bytes",
+            index=1,
+            number=2,
+            type=12,
+            cpp_type=9,
+            label=2,
+            has_default_value=False,
+            default_value=_b(""),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=92,
+    serialized_end=158,
+)
+
+
+_INITCOMMAND = _descriptor.Descriptor(
+    name="InitCommand",
+    full_name="dfu.InitCommand",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="fw_version",
+            full_name="dfu.InitCommand.fw_version",
+            index=0,
+            number=1,
+            type=13,
+            cpp_type=3,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="hw_version",
+            full_name="dfu.InitCommand.hw_version",
+            index=1,
+            number=2,
+            type=13,
+            cpp_type=3,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="sd_req",
+            full_name="dfu.InitCommand.sd_req",
+            index=2,
+            number=3,
+            type=13,
+            cpp_type=3,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=_b("\020\001"),
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="type",
+            full_name="dfu.InitCommand.type",
+            index=3,
+            number=4,
+            type=14,
+            cpp_type=8,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="sd_size",
+            full_name="dfu.InitCommand.sd_size",
+            index=4,
+            number=5,
+            type=13,
+            cpp_type=3,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="bl_size",
+            full_name="dfu.InitCommand.bl_size",
+            index=5,
+            number=6,
+            type=13,
+            cpp_type=3,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="app_size",
+            full_name="dfu.InitCommand.app_size",
+            index=6,
+            number=7,
+            type=13,
+            cpp_type=3,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="hash",
+            full_name="dfu.InitCommand.hash",
+            index=7,
+            number=8,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="is_debug",
+            full_name="dfu.InitCommand.is_debug",
+            index=8,
+            number=9,
+            type=8,
+            cpp_type=7,
+            label=1,
+            has_default_value=True,
+            default_value=False,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="boot_validation",
+            full_name="dfu.InitCommand.boot_validation",
+            index=9,
+            number=10,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=161,
+    serialized_end=409,
+)
+
+
+_RESETCOMMAND = _descriptor.Descriptor(
+    name="ResetCommand",
+    full_name="dfu.ResetCommand",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="timeout",
+            full_name="dfu.ResetCommand.timeout",
+            index=0,
+            number=1,
+            type=13,
+            cpp_type=3,
+            label=2,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        )
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=411,
+    serialized_end=442,
+)
+
+
+_COMMAND = _descriptor.Descriptor(
+    name="Command",
+    full_name="dfu.Command",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="op_code",
+            full_name="dfu.Command.op_code",
+            index=0,
+            number=1,
+            type=14,
+            cpp_type=8,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="init",
+            full_name="dfu.Command.init",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="reset",
+            full_name="dfu.Command.reset",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=444,
+    serialized_end=549,
+)
+
+
+_SIGNEDCOMMAND = _descriptor.Descriptor(
+    name="SignedCommand",
+    full_name="dfu.SignedCommand",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="command",
+            full_name="dfu.SignedCommand.command",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=2,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="signature_type",
+            full_name="dfu.SignedCommand.signature_type",
+            index=1,
+            number=2,
+            type=14,
+            cpp_type=8,
+            label=2,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="signature",
+            full_name="dfu.SignedCommand.signature",
+            index=2,
+            number=3,
+            type=12,
+            cpp_type=9,
+            label=2,
+            has_default_value=False,
+            default_value=_b(""),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=551,
+    serialized_end=660,
+)
+
+
+_PACKET = _descriptor.Descriptor(
+    name="Packet",
+    full_name="dfu.Packet",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="command",
+            full_name="dfu.Packet.command",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+        _descriptor.FieldDescriptor(
+            name="signed_command",
+            full_name="dfu.Packet.signed_command",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto2",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=662,
+    serialized_end=745,
+)
+
+_HASH.fields_by_name["hash_type"].enum_type = _HASHTYPE
+_BOOTVALIDATION.fields_by_name["type"].enum_type = _VALIDATIONTYPE
+_INITCOMMAND.fields_by_name["type"].enum_type = _FWTYPE
+_INITCOMMAND.fields_by_name["hash"].message_type = _HASH
+_INITCOMMAND.fields_by_name["boot_validation"].message_type = _BOOTVALIDATION
+_COMMAND.fields_by_name["op_code"].enum_type = _OPCODE
+_COMMAND.fields_by_name["init"].message_type = _INITCOMMAND
+_COMMAND.fields_by_name["reset"].message_type = _RESETCOMMAND
+_SIGNEDCOMMAND.fields_by_name["command"].message_type = _COMMAND
+_SIGNEDCOMMAND.fields_by_name["signature_type"].enum_type = _SIGNATURETYPE
+_PACKET.fields_by_name["command"].message_type = _COMMAND
+_PACKET.fields_by_name["signed_command"].message_type = _SIGNEDCOMMAND
+DESCRIPTOR.message_types_by_name["Hash"] = _HASH
+DESCRIPTOR.message_types_by_name["BootValidation"] = _BOOTVALIDATION
+DESCRIPTOR.message_types_by_name["InitCommand"] = _INITCOMMAND
+DESCRIPTOR.message_types_by_name["ResetCommand"] = _RESETCOMMAND
+DESCRIPTOR.message_types_by_name["Command"] = _COMMAND
+DESCRIPTOR.message_types_by_name["SignedCommand"] = _SIGNEDCOMMAND
+DESCRIPTOR.message_types_by_name["Packet"] = _PACKET
+DESCRIPTOR.enum_types_by_name["OpCode"] = _OPCODE
+DESCRIPTOR.enum_types_by_name["FwType"] = _FWTYPE
+DESCRIPTOR.enum_types_by_name["HashType"] = _HASHTYPE
+DESCRIPTOR.enum_types_by_name["ValidationType"] = _VALIDATIONTYPE
+DESCRIPTOR.enum_types_by_name["SignatureType"] = _SIGNATURETYPE
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+_module = "nitrokey.trussed._bootloader.nrf52_upload.dfu.dfu_cc_pb2"
+
+Hash = _reflection.GeneratedProtocolMessageType(
+    "Hash",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _HASH,
+        "__module__": _module,
+        # @@protoc_insertion_point(class_scope:dfu.Hash)
+    },
+)
+_sym_db.RegisterMessage(Hash)  # ty: ignore[invalid-argument-type]
+
+BootValidation = _reflection.GeneratedProtocolMessageType(
+    "BootValidation",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _BOOTVALIDATION,
+        "__module__": _module,
+        # @@protoc_insertion_point(class_scope:dfu.BootValidation)
+    },
+)
+_sym_db.RegisterMessage(BootValidation)  # ty: ignore[invalid-argument-type]
+
+InitCommand = _reflection.GeneratedProtocolMessageType(
+    "InitCommand",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _INITCOMMAND,
+        "__module__": _module,
+        # @@protoc_insertion_point(class_scope:dfu.InitCommand)
+    },
+)
+_sym_db.RegisterMessage(InitCommand)  # ty: ignore[invalid-argument-type]
+
+ResetCommand = _reflection.GeneratedProtocolMessageType(
+    "ResetCommand",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _RESETCOMMAND,
+        "__module__": _module,
+        # @@protoc_insertion_point(class_scope:dfu.ResetCommand)
+    },
+)
+_sym_db.RegisterMessage(ResetCommand)  # ty: ignore[invalid-argument-type]
+
+Command = _reflection.GeneratedProtocolMessageType(
+    "Command",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _COMMAND,
+        "__module__": _module,
+        # @@protoc_insertion_point(class_scope:dfu.Command)
+    },
+)
+_sym_db.RegisterMessage(Command)  # ty: ignore[invalid-argument-type]
+
+SignedCommand = _reflection.GeneratedProtocolMessageType(
+    "SignedCommand",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _SIGNEDCOMMAND,
+        "__module__": _module,
+        # @@protoc_insertion_point(class_scope:dfu.SignedCommand)
+    },
+)
+_sym_db.RegisterMessage(SignedCommand)  # ty: ignore[invalid-argument-type]
+
+Packet = _reflection.GeneratedProtocolMessageType(
+    "Packet",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _PACKET,
+        "__module__": _module,
+        # @@protoc_insertion_point(class_scope:dfu.Packet)
+    },
+)
+_sym_db.RegisterMessage(Packet)  # ty: ignore[invalid-argument-type]
+
+
+_INITCOMMAND.fields_by_name["sd_req"]._options = None
 # @@protoc_insertion_point(module_scope)
