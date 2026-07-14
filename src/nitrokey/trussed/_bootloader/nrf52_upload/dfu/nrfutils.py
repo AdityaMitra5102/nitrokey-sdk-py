@@ -62,8 +62,8 @@ def pkg_gen(
     application_version_internal = app_version if app_version else None
     sd_req_list = []
     try:
-        sd_req_list = sd_req.split(",")
-        sd_req_list = list(map(int_as_text_to_int, sd_req_list))
+        sd_req_list_temp = sd_req.split(",")
+        sd_req_list = list(map(int_as_text_to_int, sd_req_list_temp))
     except ValueError as err:
         raise NordicSemiException(
             "Could not parse value for --sd-req. Hex values should be prefixed with 0x."

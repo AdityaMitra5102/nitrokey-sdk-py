@@ -69,7 +69,7 @@ class ManifestGenerator:
         :type dict firmwares_data: The firmwares data structure describing the Nordic DFU package
         """
         self.firmwares_data = firmwares_data
-        self.manifest = None
+        self.manifest: Optional[Manifest] = None
 
     def generate_manifest(self) -> str:
         self.manifest = Manifest()
@@ -78,7 +78,7 @@ class ManifestGenerator:
             firmware_dict = self.firmwares_data[key]
 
             if key == HexType.SD_BL:
-                _firmware = SoftdeviceBootloaderFirmware()
+                _firmware: Any = SoftdeviceBootloaderFirmware()
                 _firmware.info_read_only_metadata = FWMetaData()
                 _firmware.info_read_only_metadata.bl_size = firmware_dict[FirmwareKeys.BL_SIZE]
                 _firmware.info_read_only_metadata.sd_size = firmware_dict[FirmwareKeys.SD_SIZE]

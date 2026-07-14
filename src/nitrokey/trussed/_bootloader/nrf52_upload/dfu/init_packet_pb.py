@@ -118,9 +118,9 @@ class InitPacketPB:
             self.packet.command.op_code = pb.INIT
 
             self.init_command = pb.InitCommand()
-            self.init_command.hash.hash_type = hash_type.value  # ty: ignore[unresolved-attribute]
+            self.init_command.hash.hash_type = hash_type.value if hash_type else HashTypes.NONE.value  # ty: ignore[unresolved-attribute]
             self.init_command.type = dfu_type.value
-            self.init_command.hash.hash = hash_bytes  # ty: ignore[invalid-assignment]
+            self.init_command.hash.hash = hash_bytes if hash_bytes else b""  # ty: ignore[invalid-assignment]
             self.init_command.is_debug = is_debug
             self.init_command.fw_version = fw_version
             self.init_command.hw_version = hw_version
@@ -169,9 +169,9 @@ class InitPacketPB:
             self._validate()
         except RuntimeError:
             return False
-
-        return self.signed_command.signature is not None  # ty: ignore[unresolved-attribute]
-
+        
+        return self.packet.signed_command.signature is not None  # ty: ignore[unresolved-attribute]
+        
     def get_init_packet_pb_bytes(self) -> bytes:
         return self.packet.SerializeToString()
 

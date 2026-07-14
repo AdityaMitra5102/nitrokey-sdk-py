@@ -42,7 +42,7 @@ import os
 import shutil
 import tempfile
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 # 3rd party libraries
 from zipfile import ZipFile
@@ -165,7 +165,7 @@ class Package:
         :return: None
         """
 
-        init_packet_vars = {}
+        init_packet_vars: Dict[PacketField, Any] = {}
         if debug_mode is not None:
             init_packet_vars[PacketField.DEBUG_MODE] = debug_mode
 
@@ -185,7 +185,7 @@ class Package:
         else:
             app_boot_validation_type = [ValidationTypes.VALIDATE_GENERATED_CRC]
 
-        self.firmwares_data = {}
+        self.firmwares_data: Dict[HexType, Any] = {}
 
         if app_fw:
             firmware_type = HexType.EXTERNAL_APPLICATION if is_external else HexType.APPLICATION
@@ -239,8 +239,8 @@ class Package:
         assert not signer or isinstance(signer, Signing)
         self.signer = signer
 
-        self.work_dir = None
-        self.manifest = None
+        self.work_dir: Optional[str] = None
+        self.manifest: Optional[Manifest] = None
 
         self.is_zigbee = False
         self.image_type = None
@@ -298,7 +298,7 @@ class Package:
         if initp.packet.HasField("signed_command"):
             cmd = initp.packet.signed_command.command
             signature_type = SigningTypes(initp.packet.signed_command.signature_type).name
-            signature_hex = binascii.hexlify(initp.packet.signed_command.signature)
+            signature_hex = binascii.hexlify(initp.packet.signed_command.signature).decode()
         else:
             cmd = initp.packet.command
             signature_type = "UNSIGNED"
@@ -306,9 +306,9 @@ class Package:
 
         boot_validation_type = []
         boot_validation_bytes = []
-        for x in cmd.init.boot_validation:
-            boot_validation_type.append(ValidationTypes(x.type).name)
-            boot_validation_bytes.append(binascii.hexlify(x.bytes))  # ty: ignore[unresolved-attribute]
+        for xb in cmd.init.boot_validation:
+            boot_validation_type.append(ValidationTypes(xb.type).name)
+            boot_validation_bytes.append(binascii.hexlify(xb.bytes_))  # ty: ignore[unresolved-attribute]
 
         s = """|
 |- Image #{0}:
@@ -352,9 +352,9 @@ class Package:
             cmd.init.bl_size,
             cmd.init.app_size,
             HashTypes(cmd.init.hash.hash_type).name,
-            binascii.hexlify(cmd.init.hash.hash),
+            binascii.hexlify(cmd.init.hash.hash).decode(),
             boot_validation_type,
-            boot_validation_bytes,
+            ', '.join(chunk.hex() for chunk in boot_validation_bytes),
             cmd.init.is_debug,
         )
 
