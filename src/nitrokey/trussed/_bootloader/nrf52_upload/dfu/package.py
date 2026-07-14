@@ -308,7 +308,7 @@ class Package:
         boot_validation_bytes = []
         for xb in cmd.init.boot_validation:
             boot_validation_type.append(ValidationTypes(xb.type).name)
-            boot_validation_bytes.append(binascii.hexlify(xb.bytes_))  # ty: ignore[unresolved-attribute]
+            boot_validation_bytes.append(binascii.hexlify(xb.bytes_))
 
         s = """|
 |- Image #{0}:
@@ -354,7 +354,7 @@ class Package:
             HashTypes(cmd.init.hash.hash_type).name,
             binascii.hexlify(cmd.init.hash.hash).decode(),
             boot_validation_type,
-            ', '.join(chunk.hex() for chunk in boot_validation_bytes),
+            ", ".join(chunk.hex() for chunk in boot_validation_bytes),
             cmd.init.is_debug,
         )
 
