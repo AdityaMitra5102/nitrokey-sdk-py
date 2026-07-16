@@ -23,8 +23,9 @@ def keygen(key_file: str) -> None:
     signer.gen_key(key_file)
 
 
-def pubview(format: str, out_file: str) -> None:
+def pubview(format: str, priv_file: str, out_file: str) -> None:
     signer = Signing()
+    signer.load_key(priv_file)
     kstr = signer.get_vk(format, False)
     with open(out_file, "w") as outfile:
         outfile.write(kstr)
