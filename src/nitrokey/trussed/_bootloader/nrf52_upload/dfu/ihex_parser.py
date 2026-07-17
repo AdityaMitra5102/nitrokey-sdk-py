@@ -9,7 +9,8 @@ class IhexParser:
 
     def loadfile(self, source: str, file_format: str) -> None:
         assert file_format == "hex"
-        hexcontent = open(source, "rb").read()
+        with open(source, "rb") as fob:
+            hexcontent = fob.read()
         self._buf = self._convert_ihex(hexcontent)
 
     def writebinfile(self, fobj: BinaryIO) -> None:

@@ -486,7 +486,7 @@ DFU Package: <{0}>:
                     boot_validation_bytes_array.append(b"")
 
             init_packet = InitPacketPB(
-                from_bytes=b"",
+                from_bytes=None,
                 hash_bytes=firmware_hash,
                 hash_type=HashTypes.SHA256,
                 boot_validation_type=boot_validation_type_array,
