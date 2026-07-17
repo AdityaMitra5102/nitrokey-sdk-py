@@ -4,7 +4,7 @@ import unittest
 
 from cryptography.hazmat.primitives import serialization
 
-from nitrokey.trussed._bootloader.nrf52 import Image, SignatureKey
+from nitrokey.trussed._bootloader.nrf52 import Image, SignatureKey, parse_firmware_image
 from nitrokey.trussed._bootloader.nrf52_upload.dfu.nrfutils import keygen, pkg_gen, pubview
 
 
@@ -46,10 +46,11 @@ class NrfTest(unittest.TestCase):
                 )
                 .hex()
             )
-            signaturekey = SignatureKey(name="Test key", is_official=False, der=der)
+            key_name = "Test key"
+            signaturekey = SignatureKey(name=key_name, is_official=False, der=der)
 
             with open(signedfirmware, "rb") as sf:
                 firmware_bytes = sf.read()
-            image = Image.parse(firmware_bytes, keys=[signaturekey])
+            metadata = parse_firmware_image(firmware_bytes, keys=[signaturekey])
 
-            self.assertTrue(image.is_signed)
+            self.assertEqual(metadata.signed_by, key_name)
