@@ -4,7 +4,7 @@ import unittest
 
 from cryptography.hazmat.primitives import serialization
 
-from nitrokey.trussed._bootloader.nrf52 import Image, SignatureKey, parse_firmware_image
+from nitrokey.trussed._bootloader.nrf52 import SignatureKey, parse_firmware_image
 from nitrokey.trussed._bootloader.nrf52_upload.dfu.nrfutils import keygen, pkg_gen, pubview
 
 
