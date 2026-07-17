@@ -14,14 +14,17 @@ class NrfTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as testpath:
             privkeyfile = os.path.join(testpath, "privkey.pem")
             keygen(privkeyfile)
+            self.assertTrue(os.path.exists(privkeyfile))
             # print(open(privkeyfile).read())
 
             pubkeycode = os.path.join(testpath, "pubkey.c")
             pubview("code", privkeyfile, pubkeycode)
+            self.assertTrue(os.path.exists(pubkeycode))
             # print(open(pubkeycode).read())
 
             pubkeypem = os.path.join(testpath, "pubkey.pem")
             pubview("pem", privkeyfile, pubkeypem)
+            self.assertTrue(os.path.exists(pubkeypem))
             # print(open(pubkeypem).read())
 
             signedfirmware = os.path.join(testpath, "firmware.zip")
@@ -34,6 +37,7 @@ class NrfTest(unittest.TestCase):
                 application=path,
                 ecdsa_validation=True,
             )
+            self.assertTrue(os.path.exists(signedfirmware))
             # print(open(signedfirmware, "rb").read())
 
             with open(pubkeypem, "rb") as pubpem:
