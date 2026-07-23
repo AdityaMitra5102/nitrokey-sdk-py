@@ -75,7 +75,7 @@ class Signing:
     Class for singing of hex-files
     """
 
-    sk: Optional[ec.EllipticCurvePrivateKey]
+    sk: Optional[ec.EllipticCurvePrivateKey | str]
 
     def gen_key(self, filename: str) -> None:
         """
@@ -123,6 +123,7 @@ class Signing:
             raise AssertionError("Can't sign. No key created/loaded")
 
         # Sign the init-packet (returns a DER-encoded signature)
+        assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
         der_signature = self.sk.sign(init_packet_data, ec.ECDSA(hashes.SHA256()))
         r, s = decode_dss_signature(der_signature)
 
@@ -138,6 +139,7 @@ class Signing:
         if self.sk is None:
             raise AssertionError("Can't save key. No key created/loaded")
 
+        assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
         vk = self.sk.public_key()
 
         # Reconstruct r, s from the raw 64-byte signature and re-encode as DER
@@ -188,6 +190,7 @@ class Signing:
             raise ValueError("Private key cannot be shown as code")
         elif output_type == "pem":
             # Return pem as str to conform in type with the other cases.
+            assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
             return self.sk.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -206,6 +209,7 @@ class Signing:
         # Reverse the key for display. This emulates a memory
         # dump of the key interpreted a 256bit little endian
         # integer.
+        assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
         key = self.sk.private_numbers().private_value.to_bytes(32, byteorder="big")
         displayed_key = key[::-1].hex()
 
@@ -221,6 +225,7 @@ class Signing:
         # Reverse the two halves of key for display. This
         # emulates a memory dump of the key interpreted as two
         # 256bit little endian integers.
+        assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
         pub_numbers = self.sk.public_key().public_numbers()
         key = pub_numbers.x.to_bytes(32, byteorder="big") + pub_numbers.y.to_bytes(
             32, byteorder="big"
@@ -264,6 +269,7 @@ class Signing:
         def to_two_digit_hex_with_0x(b: int) -> str:
             return "0x{:02x}".format(b)
 
+        assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
         pub_numbers = self.sk.public_key().public_numbers()
         key = pub_numbers.x.to_bytes(32, byteorder="big") + pub_numbers.y.to_bytes(
             32, byteorder="big"
@@ -291,6 +297,7 @@ __ALIGN(4) const uint8_t pk[64] =
         if self.sk is None:
             raise AssertionError("Can't get key. No key created/loaded")
 
+        assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
         vk = self.sk.public_key()
         vk_pem = vk.public_bytes(
             encoding=serialization.Encoding.PEM,
