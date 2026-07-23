@@ -18,13 +18,15 @@ def _int_as_text_to_int(value: str) -> int:
         raise NordicSemiException("%s is not a valid integer" % value) from err
 
 
-def keygen(key_file: str) -> None:
-    signer = Signing()
+def keygen(key_file: str, signer: Optional[Signing] = None) -> None:
+    if not signer:
+        signer = Signing()
     signer.gen_key(key_file)
 
 
-def pubview(format: str, priv_file: str, out_file: str) -> None:
-    signer = Signing()
+def pubview(format: str, priv_file: str, out_file: str, signer: Optional[Signing] = None) -> None:
+    if not signer:
+        signer = Signing()
     signer.load_key(priv_file)
     kstr = signer.get_vk(format, False)
     with open(out_file, "w") as outfile:
@@ -59,6 +61,7 @@ def pkg_gen(
     application: Optional[str] = None,
     bootloader: Optional[str] = None,
     ecdsa_validation: bool = False,
+    signer: Optional[Signing] = None,
 ) -> None:
     application_version_internal = app_version if app_version else None
     sd_req_list = []
@@ -70,7 +73,8 @@ def pkg_gen(
             "Could not parse value for --sd-req. Hex values should be prefixed with 0x."
         ) from err
 
-    signer = Signing()
+    if not signer:
+        signer = Signing()
     signer.load_key(key_file)
     app_boot_validation = "VALIDATE_ECDSA_P256_SHA256" if ecdsa_validation else None
     package = Package(
