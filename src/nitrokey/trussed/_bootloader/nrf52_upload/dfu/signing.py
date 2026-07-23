@@ -120,7 +120,7 @@ class Signing:
         """
         # Add assertion of init_packet
         if self.sk is None:
-            raise AssertionError("Can't save key. No key created/loaded")
+            raise AssertionError("Can't sign. No key created/loaded")
 
         # Sign the init-packet (returns a DER-encoded signature)
         der_signature = self.sk.sign(init_packet_data, ec.ECDSA(hashes.SHA256()))
