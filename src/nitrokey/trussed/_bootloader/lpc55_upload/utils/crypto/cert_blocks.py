@@ -12,6 +12,7 @@ from struct import calcsize, unpack_from
 from typing import List, Optional, Self, Union
 
 from ...crypto.certificate import Certificate
+from ...crypto.hash import get_hash
 from ...exceptions import SPSDKError
 from ...utils.abstract import BaseClass
 from ...utils.crypto.rkht import RKHTv1
@@ -311,3 +312,21 @@ class CertBlockV1(CertBlock):
             offset += cert_len
         obj._rkht = RKHTv1.parse(data[offset : offset + (RKHTv1.RKH_SIZE * RKHTv1.RKHT_SIZE)])
         return obj
+
+    def set_root_key_hash(self, index: int, key_hash: Union[bytes, bytearray, Certificate]) -> None:
+        """Set root key hash into RKHT at specified index.
+
+        Multiple root public keys are supported to allow for key revocation.
+
+        :param index: The index of Root Key Hash in the table.
+        :param key_hash: The Root Key Hash value (32 bytes, SHA-256) or Certificate where the hash
+            can be created from public key.
+        :raises SPSDKError: When there is invalid index of root key hash in the table.
+        :raises SPSDKError: When there is invalid length of key hash.
+        """
+        if isinstance(key_hash, Certificate):
+            key_hash = get_hash(key_hash.get_public_key().export())
+        assert isinstance(key_hash, (bytes, bytearray))
+        if len(key_hash) != self._rkht.RKH_SIZE:
+            raise SPSDKError("Invalid length of key hash")
+        self._rkht.set_rkh(index, bytes(key_hash))

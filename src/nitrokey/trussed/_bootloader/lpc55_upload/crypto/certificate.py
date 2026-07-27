@@ -23,7 +23,7 @@ from ..crypto.types import (
 )
 from ..exceptions import SPSDKError, SPSDKValueError
 from ..utils.abstract import BaseClass
-from ..utils.misc import align_block
+from ..utils.misc import align_block, load_binary
 
 
 class Certificate(BaseClass):
@@ -192,3 +192,13 @@ class Certificate(BaseClass):
             return Certificate(load_der_certificate(data))
         except ValueError as exc:
             raise SPSDKError(f"Cannot load certificate: ({str(exc)})") from exc
+
+    @classmethod
+    def load(cls, file_path: str) -> "Certificate":
+        """Load the Certificate from the given file.
+
+        :param file_path: Path to the file where the certificate is stored.
+        :return: Certificate instance loaded from the file.
+        """
+        data = load_binary(file_path)
+        return cls.parse(data=data)

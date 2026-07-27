@@ -52,6 +52,19 @@ class Counter:
         self._ctr += value
 
 
+def aes_key_wrap(kek: bytes, key_to_wrap: bytes) -> bytes:
+    """Wrap a key using AES key wrapping algorithm with a key-encrypting key (KEK).
+
+    This function implements the AES key wrap algorithm as defined in RFC 3394,
+    which provides a secure method for encrypting cryptographic keys using another key.
+
+    :param kek: The key-encrypting key used to wrap the target key.
+    :param key_to_wrap: The cryptographic key data to be wrapped.
+    :return: The wrapped key as bytes.
+    """
+    return keywrap.aes_key_wrap(kek, key_to_wrap)
+
+
 def aes_key_unwrap(kek: bytes, wrapped_key: bytes) -> bytes:
     """Unwraps a key using a key-encrypting key (KEK).
 

@@ -7,15 +7,34 @@
 
 """Boot Image V2.0, V2.1."""
 
+import os
 from datetime import datetime
-from typing import Iterator, List, Optional
+from typing import Any, Iterator, List, Optional
 
+from typing_extensions import Self
+
+from nitrokey.trussed._bootloader.nrf52_upload.dfu.signing import Signing
+
+from ...crypto.certificate import Certificate
 from ...crypto.hash import EnumHashAlgorithm, get_hash
-from ...crypto.symmetric import Counter, aes_key_unwrap
+from ...crypto.hmac import hmac_sha256 as hmac
+from ...crypto.keys import ECDSASignature
+from ...crypto.symmetric import Counter, aes_key_unwrap, aes_key_wrap
+from ...crypto.types import SPSDKEncoding
 from ...exceptions import SPSDKError
 from ...sbfile.misc import SecBootBlckSize
 from ...utils.abstract import BaseClass
+from ...utils.config import Config, SB21Helper
 from ...utils.crypto.cert_blocks import CertBlockV1
+from ...utils.misc import (
+    load_hex_string,
+    load_text,
+    parse_bd_config,
+    value_to_bytes,
+    value_to_int,
+    write_file,
+)
+from .commands import CmdHeader
 from .headers import ImageHeaderV2
 from .sections import BootSectionV2
 
@@ -355,3 +374,245 @@ class BootImageV21(BaseClass):
         obj.cert_block = cert_block
         obj.add_boot_section(boot_section)
         return obj
+
+    @classmethod
+    def parse_sb21_config(
+        cls, config_path: str, external_files: Optional[list[str]] = None
+    ) -> Config:
+        """Parse SB2.1 configuration file and create configuration object.
+
+        The method attempts to parse the configuration file as a BD (Boot Data) file first.
+        If that fails, it falls back to parsing as a YAML configuration file with validation.
+
+        :param config_path: Path to configuration file either BD or YAML formatted.
+        :param external_files: Optional list of external files for BD processing.
+        :raises SPSDKError: Invalid BD file or configuration parsing error.
+        :raises SPSDKValueError: Missing required options or family key in BD file.
+        :return: Parsed configuration object with family and revision information.
+        """
+        try:
+            bd_file_content = load_text(config_path)
+            parser = parse_bd_config(bd_file_content)
+            parsed_conf = Config(parser)
+            if parsed_conf is None:
+                raise SPSDKError("Invalid bd file, secure binary file generation terminated")
+            if "options" not in parsed_conf:
+                raise SPSDKError("Missing 'options' block in BD file.")
+            options: dict[str, Any] = parsed_conf["options"]
+            if "family" not in options:
+                raise SPSDKError("Missing 'family' key in BD file options block.")
+            parsed_conf["family"] = options.pop("family")
+            parsed_conf["revision"] = options.pop("revision", "latest")
+            parsed_conf.config_dir = os.path.dirname(config_path)
+            parsed_conf.search_paths = [parsed_conf.config_dir]
+        except SPSDKError as exc:
+            raise SPSDKError(f"Error in reading BD file {exc}") from exc
+
+        return parsed_conf
+
+    @classmethod
+    def get_advanced_params(cls, config: dict[str, Any]) -> SBV2xAdvancedParams:
+        """Get advanced parameters from configuration.
+
+        Extracts and processes advanced SB 2.x parameters including timestamp, DEK, MAC,
+        nonce, and zero padding settings from the provided configuration dictionary.
+
+        :param config: Configuration dictionary containing advanced parameter settings.
+        :return: Advanced parameters object for SB 2.x file generation.
+        """
+        # Test params
+        timestamp = config.get("timestamp")
+        if timestamp:  # re-format it
+            timestamp = datetime.fromtimestamp(value_to_int(timestamp))
+        else:
+            timestamp = datetime.now()
+        dek = config.get("dek")
+        dek = value_to_bytes("0x" + dek, byte_cnt=32) if dek else b""
+        mac = config.get("mac")
+        mac = value_to_bytes("0x" + mac, byte_cnt=32) if mac else b""
+        nonce = config.get("nonce")
+        nonce = value_to_bytes("0x" + nonce, byte_cnt=16) if nonce else b""
+
+        advanced_params = SBV2xAdvancedParams(dek, mac, nonce, timestamp)
+        return advanced_params
+
+    @classmethod
+    def load_from_config(
+        cls,
+        config: Config,
+        key_file_path: Optional[str] = None,
+        signature_provider: Optional[Signing] = None,
+        signing_certificate_file_paths: Optional[list[str]] = None,
+        root_key_certificate_paths: Optional[list[str]] = None,
+        rkth_out_path: Optional[str] = None,
+    ) -> Self:
+        """Create an instance of BootImageV21 from configuration.
+
+        This method constructs a Secure Binary V2.1 image by parsing the provided configuration,
+        setting up certificate blocks, loading encryption keys, processing sections and commands,
+        and configuring signature providers. It also handles root key hash generation and output.
+
+        :param config: Input standard configuration containing image settings and sections.
+        :param key_file_path: Path to key file for SB-KEK encryption key.
+        :param signature_provider: Signature provider instance to sign the final image.
+        :param signing_certificate_file_paths: List of paths to signing certificate chain files.
+        :param root_key_certificate_paths: List of paths to root key certificate files for
+            verifying other certificates. Maximum 4 certificates allowed, extras ignored.
+            One certificate must match the first in signing_certificate_file_paths.
+        :param rkth_out_path: Output path for root key hash table file. If None, uses
+            'hash.bin' in working directory or config-specified path.
+        :return: Configured BootImageV21 instance ready for image generation.
+        """
+        options = config.get_config("options")
+        flags = options.get_int(
+            "flags", BootImageV21.FLAGS_SHA_PRESENT_BIT | BootImageV21.FLAGS_ENCRYPTED_SIGNED_BIT
+        )
+
+        product_version = options.get_str("productVersion", "1.0.0")
+        component_version = options.get_str("componentVersion", "1.0.0")
+
+        if signing_certificate_file_paths and root_key_certificate_paths:
+            build_number = options.get_int("buildNumber", 1)
+            cert_block = CertBlockV1(build_number=build_number)
+            for cert_path in signing_certificate_file_paths:
+                cert = Certificate.load(cert_path)
+                cert_block.add_certificate(cert)
+            for cert_idx, cert_path in enumerate(root_key_certificate_paths):
+                cert = Certificate.load(cert_path)
+                cert_block.set_root_key_hash(cert_idx, cert)
+
+        if key_file_path:
+            sb_kek = load_hex_string(key_file_path, expected_size=32)
+        else:
+            sb_kek = b"\xaa" * 32
+
+        # validate keyblobs and perform appropriate actions
+        keyblobs = config.get("keyblobs", [])
+
+        # get advanced params
+        advanced_params = cls.get_advanced_params(options)
+
+        sb21_helper = SB21Helper(config.search_paths, zero_filling=advanced_params.zero_padding)
+        sb_sections = []
+        sections = config["sections"]
+        for section_id, section in enumerate(sections):
+            commands = []
+            for cmd in section["commands"]:
+                for key, value in cmd.items():
+                    # we use a helper function, based on the key ('load', 'erase'
+                    # etc.) to create a command object. The helper function knows
+                    # how to handle the parameters of each command.
+                    cmd_fce = sb21_helper.get_command(key)
+                    if key in ("keywrap", "encrypt"):
+                        keyblob = {"keyblobs": keyblobs}
+                        value.update(keyblob)
+                    cmd = cmd_fce(value)
+                    commands.append(cmd)
+
+            sb_sections.append(
+                BootSectionV2(section_id, *commands, zero_filling=advanced_params.zero_padding)
+            )
+
+        # We have a list of sections and their respective commands, lets create
+        # a boot image v2.1 object
+        secure_binary = cls(
+            sb_kek,
+            *sb_sections,
+            product_version=product_version,
+            component_version=component_version,
+            build_number=cert_block.header.build_number,
+            flags=flags,
+            advanced_params=advanced_params,
+        )
+
+        # We have our secure binary, now we attach to it the certificate block and
+        # the private key content
+        secure_binary.cert_block = cert_block
+
+        if not signature_provider:
+            signature_provider = Signing()
+
+        secure_binary.signature_provider = signature_provider
+
+        if secure_binary.cert_block:
+            if not rkth_out_path:
+                if "RKTHOutputPath" in config:
+                    rkth_out_path = config.get_output_file_name("RKTHOutputPath")
+                    # Only write the file if a path was explicitly provided
+                    write_file(secure_binary.cert_block.rkth, rkth_out_path, mode="wb")
+            else:
+                # rkth_out_path was provided, so write the file
+                assert isinstance(rkth_out_path, str), "Hash of hashes path must be string"
+                write_file(secure_binary.cert_block.rkth, rkth_out_path, mode="wb")
+
+        return secure_binary
+
+    def encode_signature(self, raw_sig: bytes) -> bytes:
+        try:
+            ecdsa_sig = ECDSASignature.parse(raw_sig)
+            signature = ecdsa_sig.export(SPSDKEncoding.NXP)
+            return signature
+        except SPSDKError as exc:
+            raise SPSDKError("Not an ECC Signature") from exc
+
+    # pylint: disable=too-many-locals
+    def export(self, padding: Optional[bytes] = None) -> bytes:
+        """Export SB2 image to binary format.
+
+        The method validates all required components, updates internal structures, and exports
+        the complete SB2 image including header, certificates, boot sections, and signature.
+
+        :param padding: Header padding (8 bytes) for testing purpose; None to use random values
+        :return: Complete SB2 image as binary data
+        :raises SPSDKError: No boot section available for export
+        :raises SPSDKError: Certificate block not assigned
+        :raises SPSDKError: Signature provider not assigned
+        :raises SPSDKError: Invalid header nonce value
+        """
+        # validate params
+        if not self.boot_sections:
+            raise SPSDKError("At least one Boot Section must be added")
+        if self.cert_block is None:
+            raise SPSDKError("Certificate is not assigned")
+        if self.signature_provider is None:
+            raise SPSDKError("Signature provider is not assigned, cannot sign the image")
+        # Update internals
+        self.update()
+        # Export Boot Sections
+        bs_data = bytes()
+        bs_offset = (
+            ImageHeaderV2.SIZE
+            + self.HEADER_MAC_SIZE
+            + self.KEY_BLOB_SIZE
+            + self.cert_block.raw_size
+            + self.cert_block.signature_size
+        )
+        if self.header.flags & self.FLAGS_SHA_PRESENT_BIT:
+            bs_offset += self.SHA_256_SIZE
+
+        if not self._header.nonce:
+            raise SPSDKError("Invalid header's nonce")
+        counter = Counter(self._header.nonce, SecBootBlckSize.to_num_blocks(bs_offset))
+        for sect in self.boot_sections:
+            bs_data += sect.export(dek=self.dek, mac=self.mac, counter=counter)
+        # Export Header
+        signed_data = self._header.export(padding=padding)
+        #  Add HMAC data
+        first_bs_hmac_count = self.boot_sections[0].hmac_count
+        hmac_data = bs_data[CmdHeader.SIZE : CmdHeader.SIZE + (first_bs_hmac_count * 32) + 32]
+        hmac_bytes = hmac(self.mac, hmac_data)
+        signed_data += hmac_bytes
+        # Add KeyBlob data
+        key_blob = aes_key_wrap(self.kek, self.dek + self.mac)
+        key_blob += b"\00" * (self.KEY_BLOB_SIZE - len(key_blob))
+        signed_data += key_blob
+        # Add Certificates data
+        signed_data += self.cert_block.export()
+        # Add SHA-256 of Bootable sections if requested
+        if self.header.flags & self.FLAGS_SHA_PRESENT_BIT:
+            signed_data += get_hash(bs_data)
+        # Add Signature data
+        raw_sig = self.signature_provider.sign(signed_data)
+        signature = self.encode_signature(raw_sig)
+
+        return signed_data + signature + bs_data
