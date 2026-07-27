@@ -49,12 +49,17 @@
 # Is modification to the license text needed?
 
 import datetime
-from typing import Optional
+from typing import Optional, cast
 
 try:
     from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.asymmetric.ec import (
+        EllipticCurvePublicKey,
+        EllipticCurvePublicNumbers,
+    )
     from cryptography.hazmat.primitives.asymmetric.utils import (
         decode_dss_signature,
         encode_dss_signature,
@@ -215,6 +220,19 @@ class Signing:
 
         return f"Private (signing) key sk:\n{displayed_key}"
 
+    def get_pub_numbers(self) -> EllipticCurvePublicNumbers:
+        if self.sk is None:
+            raise AssertionError("Can't get pubkey. No key created/loaded")
+
+        pem_data = self.get_vk_pem()
+
+        if isinstance(pem_data, str):
+            pem_data_bytes = pem_data.encode()
+
+        public_key = serialization.load_pem_public_key(pem_data_bytes, backend=default_backend())
+        ec_key = cast(EllipticCurvePublicKey, public_key)
+        return ec_key.public_numbers()
+
     def get_vk_hex(self) -> str:
         """
         Get the verification key as hex
@@ -225,8 +243,7 @@ class Signing:
         # Reverse the two halves of key for display. This
         # emulates a memory dump of the key interpreted as two
         # 256bit little endian integers.
-        assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
-        pub_numbers = self.sk.public_key().public_numbers()
+        pub_numbers = self.get_pub_numbers()
         key = pub_numbers.x.to_bytes(32, byteorder="big") + pub_numbers.y.to_bytes(
             32, byteorder="big"
         )
@@ -269,8 +286,7 @@ class Signing:
         def to_two_digit_hex_with_0x(b: int) -> str:
             return "0x{:02x}".format(b)
 
-        assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
-        pub_numbers = self.sk.public_key().public_numbers()
+        pub_numbers = self.get_pub_numbers()
         key = pub_numbers.x.to_bytes(32, byteorder="big") + pub_numbers.y.to_bytes(
             32, byteorder="big"
         )
