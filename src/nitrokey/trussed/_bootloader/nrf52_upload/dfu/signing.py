@@ -118,18 +118,22 @@ class Signing:
 
         return default_sk.private_numbers().private_value == self.sk.private_numbers().private_value
 
-    def sign(self, init_packet_data: bytes) -> bytes:
-        """
-        Create signature for init package using P-256 curve and SHA-256 as hashing algorithm
-        Returns R and S keys combined in a 64 byte array
-        """
-        # Add assertion of init_packet
+    def sign_der(self, init_packet_data: bytes) -> bytes:
         if self.sk is None:
             raise AssertionError("Can't sign. No key created/loaded")
 
         # Sign the init-packet (returns a DER-encoded signature)
         assert isinstance(self.sk, ec.EllipticCurvePrivateKey)
         der_signature = self.sk.sign(init_packet_data, ec.ECDSA(hashes.SHA256()))
+        return der_signature
+
+    def sign(self, init_packet_data: bytes) -> bytes:
+        """
+        Create signature for init package using P-256 curve and SHA-256 as hashing algorithm
+        Returns R and S keys combined in a 64 byte array
+        """
+        der_signature = self.sign_der(init_packet_data)
+        # Add assertion of init_packet
         r, s = decode_dss_signature(der_signature)
 
         signature = r.to_bytes(32, byteorder="big") + s.to_bytes(32, byteorder="big")
