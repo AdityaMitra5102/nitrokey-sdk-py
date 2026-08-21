@@ -7,17 +7,8 @@ from typing import Optional
 from fido2 import cbor
 from fido2.ctap import CtapError
 
-try:
-    from smartcard.Exceptions import CardConnectionException
-except ImportError:
-
-    class CardConnectionException(Exception):  # type: ignore[no-redef]
-        pass
-
-
-from nitrokey.trussed._device import PcscError
-
 from . import App, TimeoutException, TrussedDevice, Uuid, Version
+from ._exceptions import CcidErrorCode, ConnectionError, CtapErrorCode, DeviceError
 
 RNG_LEN = 57
 UUID_LEN = 16
@@ -215,6 +206,7 @@ class AdminApp:
     def _call(
         self, command: AdminCommand, response_len: Optional[int] = None, data: bytes = b""
     ) -> Optional[bytes]:
+        self.device._logger.debug(f"Executing admin command {command.name}")
         try:
             if command.is_legacy_command():
                 return self.device._call_admin_legacy(
@@ -226,11 +218,13 @@ class AdminApp:
                     response_len=response_len,
                     data=command.value.to_bytes(1, "big") + data,
                 )
-        except CtapError as e:
-            if e.code == CtapError.ERR.INVALID_COMMAND:
+        except DeviceError as e:
+            if e.is_code(CcidErrorCode(0x6D, 0x00), CtapErrorCode(CtapError.ERR.INVALID_COMMAND)):
+                self.device._logger.debug(
+                    f"Admin command {command.name} is not supported by the device"
+                )
                 return None
-            else:
-                raise
+            raise
 
     def is_locked(self) -> bool:
         response = self._call(AdminCommand.LOCKED, response_len=1)
@@ -244,24 +238,18 @@ class AdminApp:
             elif mode == BootMode.BOOTROM:
                 try:
                     self._call(AdminCommand.UPDATE)
-                except CtapError as e:
-                    # The admin app returns an Invalid Length error if the user confirmation
+                except DeviceError as e:
+                    # The admin app returns an Invalid Length (CTAPHID) error or
+                    # ConditionsOfUseNotSatisfied error (CCID) if the user confirmation
                     # request times out
-                    if e.code == CtapError.ERR.INVALID_LENGTH:
+                    if e.is_code(
+                        CcidErrorCode(0x69, 0x85), CtapErrorCode(CtapError.ERR.INVALID_LENGTH)
+                    ):
                         raise TimeoutException() from e
-                    else:
-                        raise e
-                except PcscError as e:
-                    # The admin app returns ConditionsOfUseNotSatisfied if the user confirmation
-                    # request times out
-                    if e.sw1 == 0x69 and e.sw2 == 0x85:
-                        raise TimeoutException() from None
-                    else:
-                        raise e
-
-        except (OSError, CardConnectionException) as e:
-            # OS error is expected as the device does not respond during the reboot
-            self.device._logger.debug("ignoring OSError after reboot", exc_info=e)
+                    raise e
+        except ConnectionError as e:
+            # Connection loss is expected as the device does not respond during the reboot
+            self.device._logger.debug("ignoring ConnectionError after reboot", exc_info=e)
         return True
 
     def rng(self) -> bytes:
@@ -284,25 +272,30 @@ class AdminApp:
                     status.variant = Variant(reply[4])
                 except ValueError:
                     pass
+        self.device._logger.debug(f"Device status: {status}")
         return status
 
     def uuid(self) -> Optional[Uuid]:
         uuid = self._call(AdminCommand.UUID)
         if uuid is None or len(uuid) == 0:
             # Firmware version 1.0.0 does not support querying the UUID
+            self.device._logger.debug("Device does not report a UUID")
             return None
         if len(uuid) != UUID_LEN:
             raise ValueError(f"UUID response has invalid length {len(uuid)}")
-        return Uuid(int.from_bytes(uuid, byteorder="big"))
+        parsed_uuid = Uuid(int.from_bytes(uuid, byteorder="big"))
+        self.device._logger.debug(f"Device UUID: {parsed_uuid}")
+        return parsed_uuid
 
     def version(self) -> Version:
         reply = self._call(AdminCommand.VERSION, data=bytes([0x01]))
         assert reply is not None
         if len(reply) == VERSION_LEN:
-            version = int.from_bytes(reply, "big")
-            return Version.from_int(version)
+            version = Version.from_int(int.from_bytes(reply, "big"))
         else:
-            return Version.from_str(reply.decode("utf-8"))
+            version = Version.from_str(reply.decode("utf-8"))
+        self.device._logger.debug(f"Device firmware version: {version}")
+        return version
 
     def se050_tests(self) -> Optional[bytes]:
         return self._call(AdminCommand.TEST_SE050)
