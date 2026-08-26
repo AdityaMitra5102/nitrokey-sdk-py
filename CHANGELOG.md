@@ -5,6 +5,7 @@
 - `nitrokey.nk3.secrets_app`: Fix discarded authentication when using `SecretsApp` over CCID
 - Bump minimum Python version to 3.11.
 - `nitrokey.trussed`: Add the `inner_checksum` field to `FirmwareMetadata` with the checksum of the unsigned firmware image.
+- `nitrokey.checksum`: Add unified checksum calculation for both NRF52 and LPC55 firmware files.
 - `nitrokey.trussed.nrfutils`: Add support for NRF52 package signing and upload
 - Wrap `OSError` in `ConnectionError` and `CtapError` in `DeviceError` for transport-agnostic error types.
 - Move connection handling into separate classes.
@@ -14,6 +15,7 @@
 - Replace `should_default_ccid` function with `recommended_transport` function.
 - Add `TrussedDevice.ctaphid_device` function.
 - Add support for credentials import and export in FIDO CXF format.
+- Rename `pcsc` extra to `ccid`.
 
 [All Changes](https://github.com/Nitrokey/nitrokey-sdk-py/compare/v0.5.0-rc.2...HEAD)
 
