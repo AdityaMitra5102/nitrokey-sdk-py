@@ -613,14 +613,15 @@ class SecretsApp:
                     export_list.append(
                         Item.from_password_representation(PasswordRepresentation(item, current_pse))
                     )
-                    callaback_label = " (OTP skipped)" if not current_basic_auth else ""
+                    callback_label = " (OTP skipped)" if not current_basic_auth else ""
                     callback_status.successful_credentials.append(
-                        item.label + callaback_label.encode()
+                        item.label + callback_label.encode()
                     )
-                    callback_status.partial_credentials.append(item.label)
+                    if not current_basic_auth:
+                        callback_status.partial_credentials.append(item.label)
 
         if callback:
-            callback(len(total_list), callback_status)  # Fincal call
+            callback(len(total_list), callback_status)  # Final call
         cxfpayload = CXFPayload.from_items(items=export_list)
         if not encryption:
             return CXFBackupCombined(
